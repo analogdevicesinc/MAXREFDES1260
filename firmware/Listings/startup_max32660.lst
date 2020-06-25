@@ -1,0 +1,1649 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;;;;;;;;;;;;;;;;;
+    2 00000000         ; Copyright (C) 2016 Maxim Integrated Products, Inc., Al
+                       l Rights Reserved.
+    3 00000000         ;
+    4 00000000         ; Permission is hereby granted, free of charge, to any p
+                       erson obtaining a
+    5 00000000         ; copy of this software and associated documentation fil
+                       es (the "Software"),
+    6 00000000         ; to deal in the Software without restriction, including
+                        without limitation
+    7 00000000         ; the rights to use, copy, modify, merge, publish, distr
+                       ibute, sublicense,
+    8 00000000         ; and/or sell copies of the Software, and to permit pers
+                       ons to whom the
+    9 00000000         ; Software is furnished to do so, subject to the followi
+                       ng conditions:
+   10 00000000         ;
+   11 00000000         ; The above copyright notice and this permission notice 
+                       shall be included
+   12 00000000         ; in all copies or substantial portions of the Software.
+                       
+   13 00000000         ;
+   14 00000000         ; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF 
+                       ANY KIND, EXPRESS
+   15 00000000         ; OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIE
+                       S OF
+   16 00000000         ; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+                       NONINFRINGEMENT.
+   17 00000000         ; IN NO EVENT SHALL MAXIM INTEGRATED BE LIABLE FOR ANY C
+                       LAIM, DAMAGES
+   18 00000000         ; OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+                       TORT OR OTHERWISE,
+   19 00000000         ; ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWAR
+                       E OR THE USE OR
+   20 00000000         ; OTHER DEALINGS IN THE SOFTWARE.
+   21 00000000         ;
+   22 00000000         ; Except as contained in this notice, the name of Maxim 
+                       Integrated
+   23 00000000         ; Products, Inc. shall not be used except as stated in t
+                       he Maxim Integrated
+   24 00000000         ; Products, Inc. Branding Policy.
+   25 00000000         ;
+   26 00000000         ; The mere transfer of this software does not imply any 
+                       licenses
+   27 00000000         ; of trade secrets, proprietary technology, copyrights, 
+                       patents,
+   28 00000000         ; trademarks, maskwork rights, or any other form of inte
+                       llectual
+   29 00000000         ; property whatsoever. Maxim Integrated Products, Inc. r
+                       etains all
+   30 00000000         ; ownership rights.
+   31 00000000         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                       ;;;;;;;;;;;;;;;;;;;;;;;
+   32 00000000         
+   33 00000000         ; To map FreeRTOS function names to their CMSIS equivale
+                       nts add following lines to FreeRTOSConfig.h
+   34 00000000         ; #define vPortSVCHandler SVC_Handler
+   35 00000000         ; #define xPortPendSVHandler PendSV_Handler
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   36 00000000         ; #define xPortSysTickHandler SysTick_Handler
+   37 00000000         ; *------- <<< Use Configuration Wizard in Context Menu 
+                       to Modify Stack Size and Heap Size. >>> ----
+   38 00000000         
+   39 00000000         ; <h> Stack Configuration
+   40 00000000         ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
+   41 00000000         ; </h>
+   42 00000000         
+   43 00000000 00001000 
+                       Stack_Size
+                               EQU              0x00001000
+   44 00000000         
+   45 00000000                 AREA             STACK, NOINIT, READWRITE, ALIGN
+=3
+   46 00000000         Stack_Mem
+                               SPACE            Stack_Size
+   47 00001000         __initial_sp                         ; Name used with Ke
+                                                            il Configuration Wi
+                                                            zard and Keil Micro
+                                                            Lib
+   48 00001000         
+   49 00001000         ; <h> Heap Configuration
+   50 00001000         ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
+   51 00001000         ; </h>
+   52 00001000         
+   53 00001000 00000C00 
+                       Heap_Size
+                               EQU              0x00000C00
+   54 00001000         
+   55 00001000                 AREA             HEAP, NOINIT, READWRITE, ALIGN=
+3
+   56 00000000         __heap_base
+   57 00000000         Heap_Mem
+                               SPACE            Heap_Size
+   58 00000C00         __heap_limit
+   59 00000C00         
+   60 00000C00                 PRESERVE8
+   61 00000C00                 THUMB
+   62 00000C00         
+   63 00000C00         
+   64 00000C00         ; Vector Table Mapped to Address 0 at Reset
+   65 00000C00         
+   66 00000C00                 AREA             RESET, DATA, READONLY
+   67 00000000                 EXPORT           __Vectors
+   68 00000000                 EXPORT           __Vectors_End
+   69 00000000                 EXPORT           __Vectors_Size
+   70 00000000                 EXPORT           __isr_vector
+   71 00000000                 IMPORT           SysTick_Handler
+   72 00000000         
+   73 00000000 00000000 
+                       __isr_vector
+                               DCD              __initial_sp ; Top of Stack
+   74 00000004 00000000        DCD              Reset_Handler ; Reset Handler
+   75 00000008 00000000        DCD              NMI_Handler ; NMI Handler
+   76 0000000C 00000000        DCD              HardFault_Handler ; Hard Fault 
+                                                            Handler
+   77 00000010 00000000        DCD              MemManage_Handler 
+                                                            ; MPU Fault Handler
+                                                            
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   78 00000014 00000000        DCD              BusFault_Handler 
+                                                            ; Bus Fault Handler
+                                                            
+   79 00000018 00000000        DCD              UsageFault_Handler ; Usage Faul
+                                                            t Handler
+   80 0000001C 00000000        DCD              0           ; Reserved
+   81 00000020 00000000        DCD              0           ; Reserved
+   82 00000024 00000000        DCD              0           ; Reserved
+   83 00000028 00000000        DCD              0           ; Reserved
+   84 0000002C 00000000        DCD              SVC_Handler ; SVCall Handler
+   85 00000030 00000000        DCD              DebugMon_Handler ; Debug Monito
+                                                            r Handler
+   86 00000034 00000000        DCD              0           ; Reserved
+   87 00000038 00000000        DCD              PendSV_Handler ; PendSV Handler
+                                                            
+   88 0000003C 00000000        DCD              SysTick_Handler 
+                                                            ; SysTick Handler
+   89 00000040         
+   90 00000040         ; Device-specific Interrupts
+   91 00000040 00000000        DCD              PF_IRQHandler ; 0x10  0x0040  1
+                                                            6: Power Fail
+   92 00000044 00000000        DCD              WDT0_IRQHandler ; 0x11  0x0044 
+                                                             17: Watchdog 0
+   93 00000048 00000000        DCD              RSV00_IRQHandler ; 0x12  0x0048
+                                                              18: RSV00
+   94 0000004C 00000000        DCD              RTC_IRQHandler ; 0x13  0x004C  
+                                                            19: RTC
+   95 00000050 00000000        DCD              RSV01_IRQHandler ; 0x14  0x0050
+                                                              20: RSV1
+   96 00000054 00000000        DCD              TMR0_IRQHandler ; 0x15  0x0054 
+                                                             21: Timer 0
+   97 00000058 00000000        DCD              TMR1_IRQHandler ; 0x16  0x0058 
+                                                             22: Timer 1
+   98 0000005C 00000000        DCD              TMR2_IRQHandler ; 0x17  0x005C 
+                                                             23: Timer 2
+   99 00000060 00000000        DCD              RSV02_IRQHandler ; 0x18  0x0060
+                                                              24: RSV02
+  100 00000064 00000000        DCD              RSV03_IRQHandler ; 0x19  0x0064
+                                                              25: RSV03
+  101 00000068 00000000        DCD              RSV04_IRQHandler ; 0x1A  0x0068
+                                                              26: RSV04
+  102 0000006C 00000000        DCD              RSV05_IRQHandler ; 0x1B  0x006C
+                                                              27: RSV05
+  103 00000070 00000000        DCD              RSV06_IRQHandler ; 0x1C  0x0070
+                                                              28: RSV06
+  104 00000074 00000000        DCD              I2C0_IRQHandler ; 0x1D  0x0074 
+                                                             29: I2C0
+  105 00000078 00000000        DCD              UART0_IRQHandler ; 0x1E  0x0078
+                                                              30: UART 0
+  106 0000007C 00000000        DCD              UART1_IRQHandler ; 0x1F  0x007C
+                                                              31: UART 1
+  107 00000080 00000000        DCD              SPI0_IRQHandler ; 0x20  0x0080 
+                                                             32: SPIY17
+  108 00000084 00000000        DCD              SPI1_IRQHandler ; 0x21  0x0084 
+                                                             33: SPIMSS
+  109 00000088 00000000        DCD              RSV07_IRQHandler ; 0x22  0x0088
+                                                              34: RSV07
+  110 0000008C 00000000        DCD              RSV08_IRQHandler ; 0x23  0x008C
+                                                              35: RSV08
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+  111 00000090 00000000        DCD              RSV09_IRQHandler ; 0x24  0x0090
+                                                              36: RSV09
+  112 00000094 00000000        DCD              RSV10_IRQHandler ; 0x25  0x0094
+                                                              37: RSV10
+  113 00000098 00000000        DCD              RSV11_IRQHandler ; 0x26  0x0098
+                                                              38: RSV11
+  114 0000009C 00000000        DCD              FLC_IRQHandler ; 0x27  0x009C  
+                                                            39: FLC
+  115 000000A0 00000000        DCD              GPIO0_IRQHandler ; 0x28  0x00A0
+                                                              40: GPIO0
+  116 000000A4 00000000        DCD              RSV12_IRQHandler ; 0x29  0x00A4
+                                                              41: RSV12
+  117 000000A8 00000000        DCD              RSV13_IRQHandler ; 0x2A  0x00A8
+                                                              42: RSV13
+  118 000000AC 00000000        DCD              RSV14_IRQHandler ; 0x2B  0x00AC
+                                                              43: RSV14
+  119 000000B0 00000000        DCD              DMA0_IRQHandler ; 0x2C  0x00B0 
+                                                             44: DMA0
+  120 000000B4 00000000        DCD              DMA1_IRQHandler ; 0x2D  0x00B4 
+                                                             45: DMA1
+  121 000000B8 00000000        DCD              DMA2_IRQHandler ; 0x2E  0x00B8 
+                                                             46: DMA2
+  122 000000BC 00000000        DCD              DMA3_IRQHandler ; 0x2F  0x00BC 
+                                                             47: DMA3
+  123 000000C0 00000000        DCD              RSV15_IRQHandler ; 0x30  0x00C0
+                                                              48: RSV15
+  124 000000C4 00000000        DCD              RSV16_IRQHandler ; 0x31  0x00C4
+                                                              49: RSV16
+  125 000000C8 00000000        DCD              RSV17_IRQHandler ; 0x32  0x00C8
+                                                              50: RSV17
+  126 000000CC 00000000        DCD              RSV18_IRQHandler ; 0x33  0x00CC
+                                                              51: RSV18
+  127 000000D0 00000000        DCD              I2C1_IRQHandler ; 0x34  0x00D0 
+                                                             52: I2C1
+  128 000000D4 00000000        DCD              RSV19_IRQHandler ; 0x35  0x00D4
+                                                              53: RSV19
+  129 000000D8 00000000        DCD              RSV20_IRQHandler ; 0x36  0x00D8
+                                                              54: RSV20
+  130 000000DC 00000000        DCD              RSV21_IRQHandler ; 0x37  0x00DC
+                                                              55: RSV21
+  131 000000E0 00000000        DCD              RSV22_IRQHandler ; 0x38  0x00E0
+                                                              56: RSV22
+  132 000000E4 00000000        DCD              RSV23_IRQHandler ; 0x39  0x00E4
+                                                              57: RSV23
+  133 000000E8 00000000        DCD              RSV24_IRQHandler ; 0x3A  0x00E8
+                                                              58: RSV24
+  134 000000EC 00000000        DCD              RSV25_IRQHandler ; 0x3B  0x00EC
+                                                              59: RSV25
+  135 000000F0 00000000        DCD              RSV26_IRQHandler ; 0x3C  0x00F0
+                                                              60: RSV26
+  136 000000F4 00000000        DCD              RSV27_IRQHandler ; 0x3D  0x00F4
+                                                              61: RSV27
+  137 000000F8 00000000        DCD              RSV28_IRQHandler ; 0x3E  0x00F8
+                                                              62: RSV28
+  138 000000FC 00000000        DCD              RSV29_IRQHandler ; 0x3F  0x00FC
+                                                              63: RSV29
+  139 00000100 00000000        DCD              RSV30_IRQHandler ; 0x40  0x0100
+                                                              64: RSV30
+  140 00000104 00000000        DCD              RSV31_IRQHandler ; 0x41  0x0104
+
+
+
+ARM Macro Assembler    Page 5 
+
+
+                                                              65: RSV31
+  141 00000108 00000000        DCD              RSV32_IRQHandler ; 0x42  0x0108
+                                                              66: RSV32
+  142 0000010C 00000000        DCD              RSV33_IRQHandler ; 0x43  0x010C
+                                                              67: RSV33
+  143 00000110 00000000        DCD              RSV34_IRQHandler ; 0x44  0x0110
+                                                              68: RSV34
+  144 00000114 00000000        DCD              RSV35_IRQHandler ; 0x45  0x0114
+                                                              69: RSV35
+  145 00000118 00000000        DCD              GPIOWAKE_IRQHandler ; 0x46  0x0
+                                                            118  70: GPIO Wakeu
+                                                            p
+  146 0000011C         __isr_vector_end
+  147 0000011C         
+  148 0000011C 0000011C 
+                       __isr_vector_size
+                               EQU              __isr_vector_end - __isr_vector
+  149 0000011C 00000000 
+                       __Vectors
+                               EQU              __isr_vector
+  150 0000011C 0000011C 
+                       __Vectors_End
+                               EQU              __isr_vector_end
+  151 0000011C 0000011C 
+                       __Vectors_Size
+                               EQU              __isr_vector_size
+  152 0000011C         
+  153 0000011C                 AREA             |.text|, CODE, READONLY
+  154 00000000         
+  155 00000000         Reset_Handler
+                               PROC
+  156 00000000                 EXPORT           Reset_Handler                  
+  [WEAK]
+  157 00000000                 IMPORT           PreInit
+  158 00000000         ;IMPORT SystemInit
+  159 00000000                 IMPORT           __main
+  160 00000000 4807            LDR              R0, =PreInit ; Call to PreInit 
+                                                            (prior to RAM initi
+                                                            alization)
+  161 00000002 4780            BLX              R0
+  162 00000004 4807            LDR              R0, =__main ; SystemInit() is c
+                                                            alled from post sca
+                                                            tter memory initial
+                                                            ization in function
+                                                              $Sub$$__main_afte
+                                                            r_scatterload - sys
+                                                            tem_max32660.c
+  163 00000006 4700            BX               R0
+  164 00000008         __SPIN
+  165 00000008 BF30            WFI
+  166 0000000A F7FF FFFD       BL               __SPIN
+  167 0000000E                 ENDP
+  168 0000000E         
+  169 0000000E         ; Dummy Exception Handlers (infinite loops which can be 
+                       modified)
+  170 0000000E         
+  172 0000000E         NMI_Handler
+                               PROC
+  173 0000000E                 EXPORT           NMI_Handler             [WEAK]
+
+
+
+ARM Macro Assembler    Page 6 
+
+
+  174 0000000E E7FE            B                .
+  175 00000010                 ENDP
+  176 00000010         
+  178 00000010         HardFault_Handler
+                               PROC
+  179 00000010                 EXPORT           HardFault_Handler       [WEAK]
+  180 00000010 E7FE            B                .
+  181 00000012                 ENDP
+  182 00000012         
+  184 00000012         MemManage_Handler
+                               PROC
+  185 00000012                 EXPORT           MemManage_Handler       [WEAK]
+  186 00000012 E7FE            B                .
+  187 00000014                 ENDP
+  188 00000014         
+  190 00000014         BusFault_Handler
+                               PROC
+  191 00000014                 EXPORT           BusFault_Handler        [WEAK]
+  192 00000014 E7FE            B                .
+  193 00000016                 ENDP
+  194 00000016         
+  196 00000016         UsageFault_Handler
+                               PROC
+  197 00000016                 EXPORT           UsageFault_Handler      [WEAK]
+  198 00000016 E7FE            B                .
+  199 00000018                 ENDP
+  200 00000018         
+  202 00000018         SVC_Handler
+                               PROC
+  203 00000018                 EXPORT           SVC_Handler             [WEAK]
+  204 00000018 E7FE            B                .
+  205 0000001A                 ENDP
+  206 0000001A         
+  208 0000001A         DebugMon_Handler
+                               PROC
+  209 0000001A                 EXPORT           DebugMon_Handler        [WEAK]
+  210 0000001A E7FE            B                .
+  211 0000001C                 ENDP
+  212 0000001C         
+  214 0000001C         PendSV_Handler
+                               PROC
+  215 0000001C                 EXPORT           PendSV_Handler          [WEAK]
+  216 0000001C E7FE            B                .
+  217 0000001E                 ENDP
+  219 0000001E         Default_Handler
+                               PROC
+  220 0000001E         ; MAX32660 Device-specific Interrupts
+  221 0000001E                 EXPORT           PF_IRQHandler            [WEAK]
+ 
+                                                            ;  0x10  0x0040  16
+                                                            : Power Fail
+  222 0000001E                 EXPORT           WDT0_IRQHandler          [WEAK]
+ 
+                                                            ;  0x11  0x0044  17
+                                                            : Watchdog 0
+  223 0000001E                 EXPORT           RSV00_IRQHandler         [WEAK]
+ 
+                                                            ;  0x12  0x0048  18
+                                                            : RSV00
+
+
+
+ARM Macro Assembler    Page 7 
+
+
+  224 0000001E                 EXPORT           RTC_IRQHandler           [WEAK]
+ 
+                                                            ;  0x13  0x004C  19
+                                                            : RTC
+  225 0000001E                 EXPORT           RSV01_IRQHandler         [WEAK]
+ 
+                                                            ;  0x14  0x0050  20
+                                                            : RSV01
+  226 0000001E                 EXPORT           TMR0_IRQHandler          [WEAK]
+ 
+                                                            ;  0x15  0x0054  21
+                                                            : Timer 0
+  227 0000001E                 EXPORT           TMR1_IRQHandler          [WEAK]
+ 
+                                                            ;  0x16  0x0058  22
+                                                            : Timer 1
+  228 0000001E                 EXPORT           TMR2_IRQHandler          [WEAK]
+ 
+                                                            ;  0x17  0x005C  23
+                                                            : Timer 2
+  229 0000001E                 EXPORT           RSV02_IRQHandler         [WEAK]
+ 
+                                                            ;  0x18  0x0060  24
+                                                            : RSV02
+  230 0000001E                 EXPORT           RSV03_IRQHandler         [WEAK]
+ 
+                                                            ;  0x19  0x0064  25
+                                                            : RSV03
+  231 0000001E                 EXPORT           RSV04_IRQHandler         [WEAK]
+ 
+                                                            ;  0x1A  0x0068  26
+                                                            : RSV04
+  232 0000001E                 EXPORT           RSV05_IRQHandler         [WEAK]
+ 
+                                                            ;  0x1B  0x006C  27
+                                                            : RSV05
+  233 0000001E                 EXPORT           RSV06_IRQHandler         [WEAK]
+ 
+                                                            ;  0x1C  0x0070  28
+                                                            : RSV06
+  234 0000001E                 EXPORT           I2C0_IRQHandler          [WEAK]
+ 
+                                                            ;  0x1D  0x0074  29
+                                                            : I2C0
+  235 0000001E                 EXPORT           UART0_IRQHandler         [WEAK]
+ 
+                                                            ;  0x1E  0x0078  30
+                                                            : UART 0
+  236 0000001E                 EXPORT           UART1_IRQHandler         [WEAK]
+ 
+                                                            ;  0x1F  0x007C  31
+                                                            : UART 1
+  237 0000001E                 EXPORT           SPI0_IRQHandler          [WEAK]
+ 
+                                                            ;  0x20  0x0080  32
+                                                            : SPIY17
+  238 0000001E                 EXPORT           SPI1_IRQHandler          [WEAK]
+ 
+                                                            ;  0x21  0x0084  33
+
+
+
+ARM Macro Assembler    Page 8 
+
+
+                                                            : SPIMSS
+  239 0000001E                 EXPORT           RSV07_IRQHandler         [WEAK]
+ 
+                                                            ;  0x22  0x0088  34
+                                                            : RSV07
+  240 0000001E                 EXPORT           RSV08_IRQHandler         [WEAK]
+ 
+                                                            ;  0x23  0x008C  35
+                                                            : RSV08
+  241 0000001E                 EXPORT           RSV09_IRQHandler         [WEAK]
+ 
+                                                            ;  0x24  0x0090  36
+                                                            : RSV09
+  242 0000001E                 EXPORT           RSV10_IRQHandler         [WEAK]
+ 
+                                                            ;  0x25  0x0094  37
+                                                            : RSV10
+  243 0000001E                 EXPORT           RSV11_IRQHandler         [WEAK]
+ 
+                                                            ;  0x26  0x0098  38
+                                                            : RSV11
+  244 0000001E                 EXPORT           FLC_IRQHandler           [WEAK]
+ 
+                                                            ;  0x27  0x009C  39
+                                                            : FLC
+  245 0000001E                 EXPORT           GPIO0_IRQHandler         [WEAK]
+ 
+                                                            ;  0x28  0x00A0  40
+                                                            : GPIO0
+  246 0000001E                 EXPORT           RSV12_IRQHandler         [WEAK]
+ 
+                                                            ;  0x29  0x00A4  41
+                                                            : RSV12
+  247 0000001E                 EXPORT           RSV13_IRQHandler         [WEAK]
+ 
+                                                            ;  0x2A  0x00A8  42
+                                                            : RSV13
+  248 0000001E                 EXPORT           RSV14_IRQHandler         [WEAK]
+ 
+                                                            ;  0x2B  0x00AC  43
+                                                            : RSV14
+  249 0000001E                 EXPORT           DMA0_IRQHandler          [WEAK]
+ 
+                                                            ;  0x2C  0x00B0  44
+                                                            : DMA0
+  250 0000001E                 EXPORT           DMA1_IRQHandler          [WEAK]
+ 
+                                                            ;  0x2D  0x00B4  45
+                                                            : DMA1
+  251 0000001E                 EXPORT           DMA2_IRQHandler          [WEAK]
+ 
+                                                            ;  0x2E  0x00B8  46
+                                                            : DMA2
+  252 0000001E                 EXPORT           DMA3_IRQHandler          [WEAK]
+ 
+                                                            ;  0x2F  0x00BC  47
+                                                            : DMA3
+  253 0000001E                 EXPORT           RSV15_IRQHandler         [WEAK]
+ 
+
+
+
+ARM Macro Assembler    Page 9 
+
+
+                                                            ;  0x30  0x00C0  48
+                                                            : RSV15
+  254 0000001E                 EXPORT           RSV16_IRQHandler         [WEAK]
+ 
+                                                            ;  0x31  0x00C4  49
+                                                            : RSV16
+  255 0000001E                 EXPORT           RSV17_IRQHandler         [WEAK]
+ 
+                                                            ;  0x32  0x00C8  50
+                                                            : RSV17
+  256 0000001E                 EXPORT           RSV18_IRQHandler         [WEAK]
+ 
+                                                            ;  0x33  0x00CC  51
+                                                            : RSV18
+  257 0000001E                 EXPORT           I2C1_IRQHandler          [WEAK]
+ 
+                                                            ;  0x34  0x00D0  52
+                                                            : I2C1
+  258 0000001E                 EXPORT           RSV19_IRQHandler         [WEAK]
+ 
+                                                            ;  0x35  0x00D4  53
+                                                            : RSV19
+  259 0000001E                 EXPORT           RSV20_IRQHandler         [WEAK]
+ 
+                                                            ;  0x36  0x00D8  54
+                                                            : RSV20
+  260 0000001E                 EXPORT           RSV21_IRQHandler         [WEAK]
+ 
+                                                            ;  0x37  0x00DC  55
+                                                            : RSV21
+  261 0000001E                 EXPORT           RSV22_IRQHandler         [WEAK]
+ 
+                                                            ;  0x38  0x00E0  56
+                                                            : RSV22
+  262 0000001E                 EXPORT           RSV23_IRQHandler         [WEAK]
+ 
+                                                            ;  0x39  0x00E4  57
+                                                            : RSV23
+  263 0000001E                 EXPORT           RSV24_IRQHandler         [WEAK]
+ 
+                                                            ;  0x3A  0x00E8  58
+                                                            : RSV24
+  264 0000001E                 EXPORT           RSV25_IRQHandler         [WEAK]
+ 
+                                                            ;  0x3B  0x00EC  59
+                                                            : RSV25
+  265 0000001E                 EXPORT           RSV26_IRQHandler         [WEAK]
+ 
+                                                            ;  0x3C  0x00F0  60
+                                                            : RSV26
+  266 0000001E                 EXPORT           RSV27_IRQHandler         [WEAK]
+ 
+                                                            ;  0x3D  0x00F4  61
+                                                            : RSV27
+  267 0000001E                 EXPORT           RSV28_IRQHandler         [WEAK]
+ 
+                                                            ;  0x3E  0x00F8  62
+                                                            : RSV28
+  268 0000001E                 EXPORT           RSV29_IRQHandler         [WEAK]
+
+
+
+ARM Macro Assembler    Page 10 
+
+
+ 
+                                                            ;  0x3F  0x00FC  63
+                                                            : RSV29
+  269 0000001E                 EXPORT           RSV30_IRQHandler         [WEAK]
+ 
+                                                            ;  0x40  0x0100  64
+                                                            : RSV30
+  270 0000001E                 EXPORT           RSV31_IRQHandler         [WEAK]
+ 
+                                                            ;  0x41  0x0104  65
+                                                            : RSV31
+  271 0000001E                 EXPORT           RSV32_IRQHandler         [WEAK]
+ 
+                                                            ;  0x42  0x0108  66
+                                                            : RSV32
+  272 0000001E                 EXPORT           RSV33_IRQHandler         [WEAK]
+ 
+                                                            ;  0x43  0x010C  67
+                                                            : RSV33
+  273 0000001E                 EXPORT           RSV34_IRQHandler         [WEAK]
+ 
+                                                            ;  0x44  0x0110  68
+                                                            : RSV34
+  274 0000001E                 EXPORT           RSV35_IRQHandler         [WEAK]
+ 
+                                                            ;  0x45  0x0114  69
+                                                            : RSV35
+  275 0000001E                 EXPORT           GPIOWAKE_IRQHandler      [WEAK]
+ 
+                                                            ;  0x46  0x0118  70
+                                                            : GPIO Wakeup
+  276 0000001E         
+  277 0000001E         ;*******************************************************
+                       ************************
+  278 0000001E         ; Default handler implementations
+  279 0000001E         ;*******************************************************
+                       ************************
+  280 0000001E         PF_IRQHandler                        ;  0x10  0x0040  16
+                                                            : Power Fail
+  281 0000001E         WDT0_IRQHandler                      ;  0x11  0x0044  17
+                                                            : Watchdog 0
+  282 0000001E         RSV00_IRQHandler                     ;  0x12  0x0048  18
+                                                            : RSV00
+  283 0000001E         RTC_IRQHandler                       ;  0x13  0x004C  19
+                                                            : RTC
+  284 0000001E         RSV01_IRQHandler                     ;  0x14  0x0050  20
+                                                            : RSV01
+  285 0000001E         TMR0_IRQHandler                      ;  0x15  0x0054  21
+                                                            : Timer 0
+  286 0000001E         TMR1_IRQHandler                      ;  0x16  0x0058  22
+                                                            : Timer 1
+  287 0000001E         TMR2_IRQHandler                      ;  0x17  0x005C  23
+                                                            : Timer 2
+  288 0000001E         RSV02_IRQHandler                     ;  0x18  0x0060  24
+                                                            : RSV02
+  289 0000001E         RSV03_IRQHandler                     ;  0x19  0x0064  25
+                                                            : RSV03
+  290 0000001E         RSV04_IRQHandler                     ;  0x1A  0x0068  26
+                                                            : RSV04
+
+
+
+ARM Macro Assembler    Page 11 
+
+
+  291 0000001E         RSV05_IRQHandler                     ;  0x1B  0x006C  27
+                                                            : RSV05
+  292 0000001E         RSV06_IRQHandler                     ;  0x1C  0x0070  28
+                                                            : RSV06
+  293 0000001E         I2C0_IRQHandler                      ;  0x1D  0x0074  29
+                                                            : I2C0
+  294 0000001E         UART0_IRQHandler                     ;  0x1E  0x0078  30
+                                                            : UART 0
+  295 0000001E         UART1_IRQHandler                     ;  0x1F  0x007C  31
+                                                            : UART 1
+  296 0000001E         SPI0_IRQHandler                      ;  0x20  0x0080  32
+                                                            : SPI0
+  297 0000001E         SPI1_IRQHandler                      ;  0x21  0x0084  33
+                                                            : SPI1
+  298 0000001E         RSV07_IRQHandler                     ;  0x22  0x0088  34
+                                                            : RSV07
+  299 0000001E         RSV08_IRQHandler                     ;  0x23  0x008C  35
+                                                            : RSV08
+  300 0000001E         RSV09_IRQHandler                     ;  0x24  0x0090  36
+                                                            : RSV09
+  301 0000001E         RSV10_IRQHandler                     ;  0x25  0x0094  37
+                                                            : RSV10
+  302 0000001E         RSV11_IRQHandler                     ;  0x26  0x0098  38
+                                                            : RSV11
+  303 0000001E         FLC_IRQHandler                       ;  0x27  0x009C  39
+                                                            : FLC
+  304 0000001E         GPIO0_IRQHandler                     ;  0x28  0x00A0  40
+                                                            : GPIO0
+  305 0000001E         RSV12_IRQHandler                     ;  0x29  0x00A4  41
+                                                            : RSV12
+  306 0000001E         RSV13_IRQHandler                     ;  0x2A  0x00A8  42
+                                                            : RSV13
+  307 0000001E         RSV14_IRQHandler                     ;  0x2B  0x00AC  43
+                                                            : RSV14
+  308 0000001E         DMA0_IRQHandler                      ;  0x2C  0x00B0  44
+                                                            : DMA0
+  309 0000001E         DMA1_IRQHandler                      ;  0x2D  0x00B4  45
+                                                            : DMA1
+  310 0000001E         DMA2_IRQHandler                      ;  0x2E  0x00B8  46
+                                                            : DMA2
+  311 0000001E         DMA3_IRQHandler                      ;  0x2F  0x00BC  47
+                                                            : DMA3
+  312 0000001E         RSV15_IRQHandler                     ;  0x30  0x00C0  48
+                                                            : RSV15
+  313 0000001E         RSV16_IRQHandler                     ;  0x31  0x00C4  49
+                                                            : RSV16
+  314 0000001E         RSV17_IRQHandler                     ;  0x32  0x00C8  50
+                                                            : RSV17
+  315 0000001E         RSV18_IRQHandler                     ;  0x33  0x00CC  51
+                                                            : RSV18
+  316 0000001E         I2C1_IRQHandler                      ;  0x34  0x00D0  52
+                                                            : I2C1
+  317 0000001E         RSV19_IRQHandler                     ;  0x35  0x00D4  53
+                                                            : RSV19
+  318 0000001E         RSV20_IRQHandler                     ;  0x36  0x00D8  54
+                                                            : RSV20
+  319 0000001E         RSV21_IRQHandler                     ;  0x37  0x00DC  55
+                                                            : RSV21
+  320 0000001E         RSV22_IRQHandler                     ;  0x38  0x00E0  56
+
+
+
+ARM Macro Assembler    Page 12 
+
+
+                                                            : RSV22
+  321 0000001E         RSV23_IRQHandler                     ;  0x39  0x00E4  57
+                                                            : RSV23
+  322 0000001E         RSV24_IRQHandler                     ;  0x3A  0x00E8  58
+                                                            : RSV24
+  323 0000001E         RSV25_IRQHandler                     ;  0x3B  0x00EC  59
+                                                            : RSV25
+  324 0000001E         RSV26_IRQHandler                     ;  0x3C  0x00F0  60
+                                                            : RSV26
+  325 0000001E         RSV27_IRQHandler                     ;  0x3D  0x00F4  61
+                                                            : RSV27
+  326 0000001E         RSV28_IRQHandler                     ;  0x3E  0x00F8  62
+                                                            : RSV28
+  327 0000001E         RSV29_IRQHandler                     ;  0x3F  0x00FC  63
+                                                            : RSV29
+  328 0000001E         RSV30_IRQHandler                     ;  0x40  0x0100  64
+                                                            : RSV30
+  329 0000001E         RSV31_IRQHandler                     ;  0x41  0x0104  65
+                                                            : RSV31
+  330 0000001E         RSV32_IRQHandler                     ;  0x42  0x0108  66
+                                                            : RSV32
+  331 0000001E         RSV33_IRQHandler                     ;  0x43  0x010C  67
+                                                            : RSV33
+  332 0000001E         RSV34_IRQHandler                     ;  0x44  0x0110  68
+                                                            : RSV34
+  333 0000001E         RSV35_IRQHandler                     ;  0x45  0x0114  69
+                                                            : RSV35
+  334 0000001E         GPIOWAKE_IRQHandler                  ;  0x46  0x0118  70
+                                                            : GPIO Wakeup
+  335 0000001E         
+  336 0000001E E7FE            B                .
+  337 00000020                 ENDP
+  338 00000020         
+  339 00000020                 ALIGN
+  340 00000020         
+  341 00000020         ;*******************************************************
+                       ************************
+  342 00000020         ; User Stack and Heap initialization
+  343 00000020         ;*******************************************************
+                       ************************
+  344 00000020                 IF               :DEF:__MICROLIB
+  345 00000020         
+  346 00000020                 EXPORT           __initial_sp
+  347 00000020                 EXPORT           __heap_base
+  348 00000020                 EXPORT           __heap_limit
+  349 00000020         
+  350 00000020                 ELSE
+  367                          ENDIF
+  368 00000020         
+  369 00000020                 END
+              00000000 
+              00000000 
+Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
+erwork --depend=.\objects\startup_max32660.d -o.\objects\startup_max32660.o -I.
+\RTE\Device\MAX32660 -I.\RTE\_Target_1 -IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.4.0\CM
+SIS\Core\Include -IC:\Keil_v5\ARM\PACK\Maxim\MAX32660\1.1.2\Boards\Maxim\MAX326
+60_EVKIT\Common\EvKit_V1\Include -IC:\Keil_v5\ARM\PACK\Maxim\MAX32660\1.1.2\Boa
+rds\Maxim\MAX32660_EVKIT\Common\Include -IC:\Keil_v5\ARM\PACK\Maxim\MAX32660\1.
+1.2\Libraries\Device\Maxim\MAX32660\Include -IC:\Keil_v5\ARM\PACK\Maxim\MAX3266
+
+
+
+ARM Macro Assembler    Page 13 
+
+
+0\1.1.2\Libraries\MAX32660PeriphDriver\Include --predefine="__MICROLIB SETA 1" 
+--predefine="__UVISION_VERSION SETA 526" --predefine="_RTE_ SETA 1" --predefine
+="MAX32660 SETA 1" --list=.\listings\startup_max32660.lst RTE\Device\MAX32660\s
+tartup_max32660.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+STACK 00000000
+
+Symbol: STACK
+   Definitions
+      At line 45 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: STACK unused
+Stack_Mem 00000000
+
+Symbol: Stack_Mem
+   Definitions
+      At line 46 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: Stack_Mem unused
+__initial_sp 00001000
+
+Symbol: __initial_sp
+   Definitions
+      At line 47 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 73 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 346 in file RTE\Device\MAX32660\startup_max32660.s
+
+3 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+HEAP 00000000
+
+Symbol: HEAP
+   Definitions
+      At line 55 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: HEAP unused
+Heap_Mem 00000000
+
+Symbol: Heap_Mem
+   Definitions
+      At line 57 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: Heap_Mem unused
+__heap_base 00000000
+
+Symbol: __heap_base
+   Definitions
+      At line 56 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 347 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __heap_base used once
+__heap_limit 00000C00
+
+Symbol: __heap_limit
+   Definitions
+      At line 58 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 348 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __heap_limit used once
+4 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 66 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: RESET unused
+__Vectors 00000000
+
+Symbol: __Vectors
+   Definitions
+      At line 149 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 67 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __Vectors used once
+__Vectors_End 0000011C
+
+Symbol: __Vectors_End
+   Definitions
+      At line 150 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 68 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __Vectors_End used once
+__isr_vector 00000000
+
+Symbol: __isr_vector
+   Definitions
+      At line 73 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 70 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 148 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 149 in file RTE\Device\MAX32660\startup_max32660.s
+
+__isr_vector_end 0000011C
+
+Symbol: __isr_vector_end
+   Definitions
+      At line 146 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 148 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 150 in file RTE\Device\MAX32660\startup_max32660.s
+
+5 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+.text 00000000
+
+Symbol: .text
+   Definitions
+      At line 153 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: .text unused
+BusFault_Handler 00000014
+
+Symbol: BusFault_Handler
+   Definitions
+      At line 190 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 78 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 191 in file RTE\Device\MAX32660\startup_max32660.s
+
+DMA0_IRQHandler 0000001E
+
+Symbol: DMA0_IRQHandler
+   Definitions
+      At line 308 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 119 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 249 in file RTE\Device\MAX32660\startup_max32660.s
+
+DMA1_IRQHandler 0000001E
+
+Symbol: DMA1_IRQHandler
+   Definitions
+      At line 309 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 120 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 250 in file RTE\Device\MAX32660\startup_max32660.s
+
+DMA2_IRQHandler 0000001E
+
+Symbol: DMA2_IRQHandler
+   Definitions
+      At line 310 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 121 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 251 in file RTE\Device\MAX32660\startup_max32660.s
+
+DMA3_IRQHandler 0000001E
+
+Symbol: DMA3_IRQHandler
+   Definitions
+      At line 311 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 122 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 252 in file RTE\Device\MAX32660\startup_max32660.s
+
+DebugMon_Handler 0000001A
+
+Symbol: DebugMon_Handler
+   Definitions
+      At line 208 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 85 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 209 in file RTE\Device\MAX32660\startup_max32660.s
+
+Default_Handler 0000001E
+
+Symbol: Default_Handler
+   Definitions
+      At line 219 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      None
+Comment: Default_Handler unused
+FLC_IRQHandler 0000001E
+
+Symbol: FLC_IRQHandler
+   Definitions
+      At line 303 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 114 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 244 in file RTE\Device\MAX32660\startup_max32660.s
+
+GPIO0_IRQHandler 0000001E
+
+Symbol: GPIO0_IRQHandler
+   Definitions
+      At line 304 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 115 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 245 in file RTE\Device\MAX32660\startup_max32660.s
+
+GPIOWAKE_IRQHandler 0000001E
+
+Symbol: GPIOWAKE_IRQHandler
+   Definitions
+      At line 334 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 145 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 275 in file RTE\Device\MAX32660\startup_max32660.s
+
+HardFault_Handler 00000010
+
+Symbol: HardFault_Handler
+   Definitions
+      At line 178 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 76 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 179 in file RTE\Device\MAX32660\startup_max32660.s
+
+I2C0_IRQHandler 0000001E
+
+Symbol: I2C0_IRQHandler
+   Definitions
+      At line 293 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 104 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 234 in file RTE\Device\MAX32660\startup_max32660.s
+
+I2C1_IRQHandler 0000001E
+
+Symbol: I2C1_IRQHandler
+
+
+
+ARM Macro Assembler    Page 3 Alphabetic symbol ordering
+Relocatable symbols
+
+   Definitions
+      At line 316 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 127 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 257 in file RTE\Device\MAX32660\startup_max32660.s
+
+MemManage_Handler 00000012
+
+Symbol: MemManage_Handler
+   Definitions
+      At line 184 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 77 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 185 in file RTE\Device\MAX32660\startup_max32660.s
+
+NMI_Handler 0000000E
+
+Symbol: NMI_Handler
+   Definitions
+      At line 172 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 75 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 173 in file RTE\Device\MAX32660\startup_max32660.s
+
+PF_IRQHandler 0000001E
+
+Symbol: PF_IRQHandler
+   Definitions
+      At line 280 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 91 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 221 in file RTE\Device\MAX32660\startup_max32660.s
+
+PendSV_Handler 0000001C
+
+Symbol: PendSV_Handler
+   Definitions
+      At line 214 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 87 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 215 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV00_IRQHandler 0000001E
+
+Symbol: RSV00_IRQHandler
+   Definitions
+      At line 282 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 93 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 223 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV01_IRQHandler 0000001E
+
+Symbol: RSV01_IRQHandler
+   Definitions
+      At line 284 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 95 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 225 in file RTE\Device\MAX32660\startup_max32660.s
+
+
+
+ARM Macro Assembler    Page 4 Alphabetic symbol ordering
+Relocatable symbols
+
+
+RSV02_IRQHandler 0000001E
+
+Symbol: RSV02_IRQHandler
+   Definitions
+      At line 288 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 99 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 229 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV03_IRQHandler 0000001E
+
+Symbol: RSV03_IRQHandler
+   Definitions
+      At line 289 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 100 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 230 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV04_IRQHandler 0000001E
+
+Symbol: RSV04_IRQHandler
+   Definitions
+      At line 290 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 101 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 231 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV05_IRQHandler 0000001E
+
+Symbol: RSV05_IRQHandler
+   Definitions
+      At line 291 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 102 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 232 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV06_IRQHandler 0000001E
+
+Symbol: RSV06_IRQHandler
+   Definitions
+      At line 292 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 103 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 233 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV07_IRQHandler 0000001E
+
+Symbol: RSV07_IRQHandler
+   Definitions
+      At line 298 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 109 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 239 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV08_IRQHandler 0000001E
+
+Symbol: RSV08_IRQHandler
+   Definitions
+
+
+
+ARM Macro Assembler    Page 5 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 299 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 110 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 240 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV09_IRQHandler 0000001E
+
+Symbol: RSV09_IRQHandler
+   Definitions
+      At line 300 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 111 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 241 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV10_IRQHandler 0000001E
+
+Symbol: RSV10_IRQHandler
+   Definitions
+      At line 301 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 112 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 242 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV11_IRQHandler 0000001E
+
+Symbol: RSV11_IRQHandler
+   Definitions
+      At line 302 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 113 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 243 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV12_IRQHandler 0000001E
+
+Symbol: RSV12_IRQHandler
+   Definitions
+      At line 305 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 116 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 246 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV13_IRQHandler 0000001E
+
+Symbol: RSV13_IRQHandler
+   Definitions
+      At line 306 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 117 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 247 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV14_IRQHandler 0000001E
+
+Symbol: RSV14_IRQHandler
+   Definitions
+      At line 307 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 118 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 248 in file RTE\Device\MAX32660\startup_max32660.s
+
+
+
+
+ARM Macro Assembler    Page 6 Alphabetic symbol ordering
+Relocatable symbols
+
+RSV15_IRQHandler 0000001E
+
+Symbol: RSV15_IRQHandler
+   Definitions
+      At line 312 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 123 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 253 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV16_IRQHandler 0000001E
+
+Symbol: RSV16_IRQHandler
+   Definitions
+      At line 313 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 124 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 254 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV17_IRQHandler 0000001E
+
+Symbol: RSV17_IRQHandler
+   Definitions
+      At line 314 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 125 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 255 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV18_IRQHandler 0000001E
+
+Symbol: RSV18_IRQHandler
+   Definitions
+      At line 315 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 126 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 256 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV19_IRQHandler 0000001E
+
+Symbol: RSV19_IRQHandler
+   Definitions
+      At line 317 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 128 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 258 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV20_IRQHandler 0000001E
+
+Symbol: RSV20_IRQHandler
+   Definitions
+      At line 318 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 129 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 259 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV21_IRQHandler 0000001E
+
+Symbol: RSV21_IRQHandler
+   Definitions
+      At line 319 in file RTE\Device\MAX32660\startup_max32660.s
+
+
+
+ARM Macro Assembler    Page 7 Alphabetic symbol ordering
+Relocatable symbols
+
+   Uses
+      At line 130 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 260 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV22_IRQHandler 0000001E
+
+Symbol: RSV22_IRQHandler
+   Definitions
+      At line 320 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 131 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 261 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV23_IRQHandler 0000001E
+
+Symbol: RSV23_IRQHandler
+   Definitions
+      At line 321 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 132 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 262 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV24_IRQHandler 0000001E
+
+Symbol: RSV24_IRQHandler
+   Definitions
+      At line 322 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 133 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 263 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV25_IRQHandler 0000001E
+
+Symbol: RSV25_IRQHandler
+   Definitions
+      At line 323 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 134 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 264 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV26_IRQHandler 0000001E
+
+Symbol: RSV26_IRQHandler
+   Definitions
+      At line 324 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 135 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 265 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV27_IRQHandler 0000001E
+
+Symbol: RSV27_IRQHandler
+   Definitions
+      At line 325 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 136 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 266 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV28_IRQHandler 0000001E
+
+
+
+ARM Macro Assembler    Page 8 Alphabetic symbol ordering
+Relocatable symbols
+
+
+Symbol: RSV28_IRQHandler
+   Definitions
+      At line 326 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 137 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 267 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV29_IRQHandler 0000001E
+
+Symbol: RSV29_IRQHandler
+   Definitions
+      At line 327 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 138 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 268 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV30_IRQHandler 0000001E
+
+Symbol: RSV30_IRQHandler
+   Definitions
+      At line 328 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 139 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 269 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV31_IRQHandler 0000001E
+
+Symbol: RSV31_IRQHandler
+   Definitions
+      At line 329 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 140 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 270 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV32_IRQHandler 0000001E
+
+Symbol: RSV32_IRQHandler
+   Definitions
+      At line 330 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 141 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 271 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV33_IRQHandler 0000001E
+
+Symbol: RSV33_IRQHandler
+   Definitions
+      At line 331 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 142 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 272 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV34_IRQHandler 0000001E
+
+Symbol: RSV34_IRQHandler
+   Definitions
+      At line 332 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+
+
+
+ARM Macro Assembler    Page 9 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 143 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 273 in file RTE\Device\MAX32660\startup_max32660.s
+
+RSV35_IRQHandler 0000001E
+
+Symbol: RSV35_IRQHandler
+   Definitions
+      At line 333 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 144 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 274 in file RTE\Device\MAX32660\startup_max32660.s
+
+RTC_IRQHandler 0000001E
+
+Symbol: RTC_IRQHandler
+   Definitions
+      At line 283 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 94 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 224 in file RTE\Device\MAX32660\startup_max32660.s
+
+Reset_Handler 00000000
+
+Symbol: Reset_Handler
+   Definitions
+      At line 155 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 74 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 156 in file RTE\Device\MAX32660\startup_max32660.s
+
+SPI0_IRQHandler 0000001E
+
+Symbol: SPI0_IRQHandler
+   Definitions
+      At line 296 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 107 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 237 in file RTE\Device\MAX32660\startup_max32660.s
+
+SPI1_IRQHandler 0000001E
+
+Symbol: SPI1_IRQHandler
+   Definitions
+      At line 297 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 108 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 238 in file RTE\Device\MAX32660\startup_max32660.s
+
+SVC_Handler 00000018
+
+Symbol: SVC_Handler
+   Definitions
+      At line 202 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 84 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 203 in file RTE\Device\MAX32660\startup_max32660.s
+
+TMR0_IRQHandler 0000001E
+
+
+
+
+ARM Macro Assembler    Page 10 Alphabetic symbol ordering
+Relocatable symbols
+
+Symbol: TMR0_IRQHandler
+   Definitions
+      At line 285 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 96 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 226 in file RTE\Device\MAX32660\startup_max32660.s
+
+TMR1_IRQHandler 0000001E
+
+Symbol: TMR1_IRQHandler
+   Definitions
+      At line 286 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 97 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 227 in file RTE\Device\MAX32660\startup_max32660.s
+
+TMR2_IRQHandler 0000001E
+
+Symbol: TMR2_IRQHandler
+   Definitions
+      At line 287 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 98 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 228 in file RTE\Device\MAX32660\startup_max32660.s
+
+UART0_IRQHandler 0000001E
+
+Symbol: UART0_IRQHandler
+   Definitions
+      At line 294 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 105 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 235 in file RTE\Device\MAX32660\startup_max32660.s
+
+UART1_IRQHandler 0000001E
+
+Symbol: UART1_IRQHandler
+   Definitions
+      At line 295 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 106 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 236 in file RTE\Device\MAX32660\startup_max32660.s
+
+UsageFault_Handler 00000016
+
+Symbol: UsageFault_Handler
+   Definitions
+      At line 196 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 79 in file RTE\Device\MAX32660\startup_max32660.s
+      At line 197 in file RTE\Device\MAX32660\startup_max32660.s
+
+WDT0_IRQHandler 0000001E
+
+Symbol: WDT0_IRQHandler
+   Definitions
+      At line 281 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 92 in file RTE\Device\MAX32660\startup_max32660.s
+
+
+
+ARM Macro Assembler    Page 11 Alphabetic symbol ordering
+Relocatable symbols
+
+      At line 222 in file RTE\Device\MAX32660\startup_max32660.s
+
+__SPIN 00000008
+
+Symbol: __SPIN
+   Definitions
+      At line 164 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 166 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __SPIN used once
+67 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Absolute symbols
+
+Heap_Size 00000C00
+
+Symbol: Heap_Size
+   Definitions
+      At line 53 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 57 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: Heap_Size used once
+Stack_Size 00001000
+
+Symbol: Stack_Size
+   Definitions
+      At line 43 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 46 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: Stack_Size used once
+__Vectors_Size 0000011C
+
+Symbol: __Vectors_Size
+   Definitions
+      At line 151 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 69 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __Vectors_Size used once
+__isr_vector_size 0000011C
+
+Symbol: __isr_vector_size
+   Definitions
+      At line 148 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 151 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __isr_vector_size used once
+4 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+PreInit 00000000
+
+Symbol: PreInit
+   Definitions
+      At line 157 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 160 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: PreInit used once
+SysTick_Handler 00000000
+
+Symbol: SysTick_Handler
+   Definitions
+      At line 71 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 88 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: SysTick_Handler used once
+__main 00000000
+
+Symbol: __main
+   Definitions
+      At line 159 in file RTE\Device\MAX32660\startup_max32660.s
+   Uses
+      At line 162 in file RTE\Device\MAX32660\startup_max32660.s
+Comment: __main used once
+3 symbols
+423 symbols in table
